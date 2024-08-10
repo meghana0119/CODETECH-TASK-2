@@ -1,0 +1,81 @@
+"""To detect fraudulent credit card transactions, a model is developed using techniques such as anomaly detection or supervised learning. Anomaly detection identifies unusual transactions that deviate from normal patterns, while supervised learning uses historical data to train the model to recognize fraud patterns."""
+# Importing Necessary Libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, precision_recall_curve
+from imblearn.over_sampling import SMOTE
+import matplotlib.pyplot as plt
+
+# Load the Dataset
+url = "https://www.kaggle.com/mlg-ulb/creditcardfraud/download"
+data = pd.read_csv("creditcard.csv")
+
+# Display Basic Information About the Dataset
+print(data.head())
+print(data.info())
+
+# Separate Features and Target Variable
+X = data.drop('Class', axis=1)
+y = data['Class']
+
+# Handle Missing Values (if any) - Drop rows with missing values in either X or y
+data_cleaned = data.dropna()  # Drop rows with NaN in any column
+
+# Reset index after dropping rows
+data_cleaned = data_cleaned.reset_index(drop=True)
+
+# Separate Features and Target Variable after handling missing values
+X = data_cleaned.drop('Class', axis=1)
+y = data_cleaned['Class']
+
+# Split the Dataset into Training and Testing Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Standardize the Features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Handling Class Imbalance with SMOTE
+sm = SMOTE(random_state=42)
+X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
+
+# Train the Logistic Regression Model
+model = LogisticRegression(random_state=42, max_iter=1000) # Increase max_iter
+model.fit(X_train_res, y_train_res)
+
+# Evaluate the Model
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+# Print Confusion Matrix and Classification Report
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Calculate and Print ROC-AUC Score
+roc_auc = roc_auc_score(y_test, y_pred_proba)
+print("ROC-AUC Score:", roc_auc)
+
+# Plot ROC Curve
+fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {roc_auc:.2f})")
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+# Plot Precision-Recall Curve
+precision, recall, thresholds = precision_recall_curve(y_test, y_pred_proba)
+plt.figure(figsize=(8, 6))
+plt.plot(recall, precision, label='Precision-Recall Curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Precision-Recall Curve')
+plt.legend(loc="upper right")
+plt.show()
