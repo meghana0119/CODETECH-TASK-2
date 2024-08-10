@@ -23,6 +23,7 @@ Handle Class Imbalance: Apply SMOTE to address class imbalance and improve model
 Evaluate Performance: Assess the model using various metrics such as confusion matrix, ROC-AUC score, and precision-recall curve.
 
 Key Steps:
+
 Data Loading: Import and explore the credit card transaction dataset.
 Data Preparation: Clean the data by handling missing values and separate features from the target variable.
 Feature Scaling: Standardize features for better model performance.
